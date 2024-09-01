@@ -27,6 +27,7 @@ les touches du clavier seront incrementé dans l'ordre ligne par ligne.
 
 les registres seront fait avec un tablau de structure : 
 
+```
 struct Registre {
     String nom;                 // Nom du registre
     uint8_t numeroCC;           // Numéro de Control Change MIDI
@@ -35,3 +36,4 @@ struct Registre {
     uint8_t adresseMCP;         // Adresse I2C du MCP23017
     uint8_t numeroPinMCP;       // Numéro de pin sur le MCP23017
 };
+```
