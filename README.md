@@ -7,7 +7,9 @@ l'objectif est de comprendre comment fabriquer facilement un systeme midi qui co
 ## l'utilisation de midi 
 
 sur un systeme de clavier d'orgue, chaque clavier est associé a un canal midi.
+
 la gestion des differents registres est faite via l'utilisation de messages control change (CC).
+l'activation de tuyaux en plus est faite par le controleur du coté tuyaux, il suffit d'nevoyer un message CC sur un canal midi pour indiquer qu'il faut ouvrir certain type de tuyaux en fonction du mapping mumero CC et 
 
 ## choix electroniques
 
