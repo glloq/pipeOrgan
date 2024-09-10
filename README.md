@@ -16,7 +16,8 @@ l'activation de tuyaux en plus est faite par le controleur du coté tuyaux, il s
 
 Pour simplifier le code et les couts, j'ai choisis d'utiliser des mcp23017 en matrice pour chaque clavier afin de permettre jusqu'a 64 entrées par clavier/chanel midi.
 il faut pensser a utiliser des diodes sur chaque entré afin pour éviter le phénomène de "ghosting" (fantômes) et de "key rollover" (erreurs lors de la détection de plusieurs touches simultanées).
-<img src="https://raw.githubusercontent.com/glloq/pipeOrgan/main/matrice%208x8png" alt="matrice 8x8" width=80% height=80%/>
+  
+<img src="https://github.com/glloq/pipeOrgan/blob/main/matrice%208x8.png" alt="matrice 8x8" width=80% height=80%/>
   
 le mcp permet l'utilisation d'interuption avec les pin INTA et INTB, pour une meilleure reactivité.
 INTA et INTB : Ces deux broches d'interruption peuvent être associées indépendamment aux broches du port A (A0-A7) et du port B (B0-B7) respectivement.
