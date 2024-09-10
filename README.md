@@ -10,11 +10,11 @@ sur un systeme de clavier d'orgue, chaque clavier est associé a un canal midi.
 
 la gestion des differents registres est faite via l'utilisation de messages control change (CC) ou program change (PC)
 
-l'activation de tuyaux en plus est faite par le controleur du coté tuyaux, il suffit d'nevoyer un message CC ou PC sur un canal midi pour indiquer qu'il faut ouvrir certain type de tuyaux (c'est a adapter en fonction de l'orgue! )
+l'activation de tuyaux en plus est faite par le controleur du coté tuyaux, il suffit d'envoyer un message CC ou PC sur un canal midi pour indiquer qu'il faut ouvrir certain type de tuyaux (c'est a adapter en fonction de l'orgue! )
 
 ## choix electroniques
 
-Pour simplifier le code et les couts, j'ai choisis d'utiliser des mcp23017 en matrice pour chaque clavier afin de permettre jusqu'a 64 entrées par clavier.
+Pour simplifier le code et les couts, j'ai choisis d'utiliser des mcp23017 en matrice pour chaque clavier afin de permettre jusqu'a 64 entrées par clavier/chanel midi.
 il faut pensser a utiliser des diodes sur chaque entré afin pour éviter le phénomène de "ghosting" (fantômes) et de "key rollover" (erreurs lors de la détection de plusieurs touches simultanées).
 <img src="https://raw.githubusercontent.com/glloq/pipeOrgan/main/matrice%208x8png" alt="matrice 8x8" width=80% height=80%/>
   
@@ -29,7 +29,7 @@ Port B (Lignes) : Les broches B0-B7 sont configurées comme entrées avec résis
 
 ## le code 
 
-exemple pour la lecture d'un mcp23017
+exemple pour la lecture d'un mcp23017 en matrice 8x8.
 
 ```
 #include <Wire.h>
@@ -112,7 +112,6 @@ void loop() {
 }
 
 ```
-
 
 ### les claviers
 
