@@ -2,9 +2,10 @@
 #include <MIDIUSB.h>
 
 // I2C Slave Addresses for the Mega devices
-#define MEGA1_ADDRESS 8
-#define MEGA2_ADDRESS 9
-#define MEGA3_ADDRESS 10
+#define MEGA1_ADDRESS 8 // keyboard 1 
+#define MEGA2_ADDRESS 9 // keyboard 2
+#define MEGA3_ADDRESS 10 // keyboard pedals and other?
+#define MEGA3_ADDRESS 11 // other register, pistons expression pedal etc.. ?
 
 void setup() {
     // Initialize I2C as master
@@ -17,6 +18,7 @@ void loop() {
     checkMidiMessages(MEGA1_ADDRESS);
     checkMidiMessages(MEGA2_ADDRESS);
     checkMidiMessages(MEGA3_ADDRESS);
+    checkMidiMessages(MEGA4_ADDRESS);
     delay(10);  // Small delay for stability
 }
 
@@ -31,7 +33,7 @@ void checkMidiMessages(uint8_t slaveAddress) {
         uint8_t data1 = Wire.read();
         uint8_t data2 = Wire.read();
         
-        // Send the MIDI message to USB
+        // Send the MIDI message to the raspberry via USB
         MidiUSB.sendMIDI(status, data1, data2);
         MidiUSB.flush();
     }
