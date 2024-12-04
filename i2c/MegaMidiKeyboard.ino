@@ -6,7 +6,7 @@
 
 // Structure for MIDI messages
 struct MidiMessage {
-    uint8_t status; // Status byte (e.g., 0x90 for Note On, 0x80 for Note Off)
+    uint8_t status; // Status byte (e.g., 0x90 for Note On, 0x80 for Note Off)=> for channel 2 it's 0x91:0x82 => channel 8 it's 0x98;0x88
     uint8_t data1;  // Note number or control number
     uint8_t data2;  // Velocity or value
 };
