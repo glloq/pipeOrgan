@@ -1,5 +1,5 @@
 #include <Wire.h>
-#include "settings.h"
+#include "MegaSettings.h"
 
 // Constants
 #define MIDI_QUEUE_SIZE 32 // Size of the FIFO queue for MIDI messages
