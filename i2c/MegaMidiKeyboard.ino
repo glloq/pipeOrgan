@@ -1,77 +1,100 @@
 #include <Wire.h>
 #include "MegaSettings.h"
 
-// Constants
-#define MIDI_QUEUE_SIZE 32 // Size of the FIFO queue for MIDI messages
+#define FIFO_SIZE 32
 
-// Structure for MIDI messages
+// Structure pour stocker un message MIDI
 struct MidiMessage {
-    uint8_t status; // Status byte (e.g., 0x90 for Note On, 0x80 for Note Off)=> for channel 2 it's 0x91:0x82 => channel 8 it's 0x98;0x88
-    uint8_t data1;  // Note number or control number
-    uint8_t data2;  // Velocity or value
+  byte status;
+  byte data1;
+  byte data2;
 };
 
-// FIFO Queue for MIDI messages
-MidiMessage midiQueue[MIDI_QUEUE_SIZE];
-volatile uint8_t queueHead = 0;
-volatile uint8_t queueTail = 0;
+// Buffer FIFO
+MidiMessage fifo[FIFO_SIZE];
+volatile int fifoHead = 0;
+volatile int fifoTail = 0;
 
-// Function to add a message to the FIFO
-bool enqueueMidiMessage(uint8_t status, uint8_t data1, uint8_t data2) {
-    uint8_t nextHead = (queueHead + 1) % MIDI_QUEUE_SIZE;
-    if (nextHead == queueTail) {
-        // Queue is full, message is dropped
-        return false;
-    }
-    midiQueue[queueHead] = {status, data1, data2};
-    queueHead = nextHead;
-    return true;
+// Fonction pour ajouter un message au buffer FIFO
+bool enqueueMessage(MidiMessage message) {
+  int nextHead = (fifoHead + 1) % FIFO_SIZE;
+  if (nextHead == fifoTail) {
+    // Buffer plein, le message est ignoré
+    return false;
+  }
+  fifo[fifoHead] = message;
+  fifoHead = nextHead;
+  return true;
 }
 
-// Function to retrieve a message from the FIFO
-bool dequeueMidiMessage(MidiMessage &msg) {
-    if (queueHead == queueTail) {
-        // Queue is empty
-        return false;
-    }
-    msg = midiQueue[queueTail];
-    queueTail = (queueTail + 1) % MIDI_QUEUE_SIZE;
-    return true;
+// Fonction pour retirer un message du buffer FIFO
+bool dequeueMessage(MidiMessage &message) {
+  if (fifoHead == fifoTail) {
+    // Buffer vide
+    return false;
+  }
+  message = fifo[fifoTail];
+  fifoTail = (fifoTail + 1) % FIFO_SIZE;
+  return true;
 }
 
-// Keyboard configuration
-bool keyStates[NUM_NOTES]; // Current state of each key
+// Tableau pour stocker l'état précédent des touches
+bool lastState[NUM_NOTES] = {0};
 
 void setup() {
-    Wire.begin(I2C_ADDRESS); // Initialize I2C as slave
-    for (uint8_t i = 0; i < NUM_NOTES; i++) {
-        pinMode(notePins[i], INPUT_PULLUP); // Set all key pins to INPUT with pull-up
-        keyStates[i] = false; // Initialize all keys as "not pressed"
-    }
+  Wire.begin(SLAVE_ADDRESS);
+  Wire.onRequest(sendNextMidiMessage); // Attache la fonction de réponse
+  for (int i = 0; i < NUM_NOTES; i++) {
+    pinMode(midiInput[i].pin, INPUT_PULLUP);
+  }
 }
 
 void loop() {
-    // Scan the keyboard
-    for (uint8_t i = 0; i < NUM_NOTES; i++) {
-        bool currentState = !digitalRead(notePins[i]); // Active LOW
-        if (currentState != keyStates[i]) {
-            keyStates[i] = currentState;
-            uint8_t status = currentState ? 0x90 : 0x80; // Note On or Note Off
-            enqueueMidiMessage(status, noteMidiNumbers[i], currentState ? DEFAULT_VELOCITY : 0);
-        }
-    }
+  // Détecter les changements d'état et ajouter les messages au buffer
+  for (int i = 0; i < NUM_NOTES; i++) {
+    bool currentState = digitalRead(midiInput[i].pin);
 
-    // Send messages from the queue via I2C
-    sendMidiMessages();
+    if (currentState != lastState[i]) {
+      lastState[i] = currentState; // Mettre à jour l'état précédent
+
+      MidiMessage message;
+      if (currentState == HIGH) { // Touche pressée
+        if (midiInput[i].messageType == 0) { // Note
+          message.status = 0x90 + midiInput[i].midiChannel;
+          message.data1 = midiInput[i].param1;
+          message.data2 = 127; // Vélocité max
+        } else if (midiInput[i].messageType == 1) { // Program Change
+          message.status = 0xC0 + midiInput[i].midiChannel;
+          message.data1 = midiInput[i].param1;
+          message.data2 = 0;
+        }
+      } else { // Touche relâchée
+        if (midiInput[i].messageType == 0) {
+          message.status = 0x80 + midiInput[i].midiChannel;
+          message.data1 = midiInput[i].param1;
+          message.data2 = 0;
+        } else if (midiInput[i].messageType == 1) {
+          message.status = 0xC0 + midiInput[i].midiChannel;
+          message.data1 = midiInput[i].param2;
+          message.data2 = 0;
+        }
+      }
+      enqueueMessage(message); // Ajouter le message au buffer
+    }
+  }
+
+  delay(DEBOUNCE_TIME); // Éviter les rebonds
 }
 
-void sendMidiMessages() {
-    MidiMessage msg;
-    while (dequeueMidiMessage(msg)) {
-        Wire.beginTransmission(I2C_ADDRESS);
-        Wire.write(msg.status);
-        Wire.write(msg.data1);
-        Wire.write(msg.data2);
-        Wire.endTransmission();
-    }
+// Fonction appelée par le maître pour récupérer un message MIDI
+void sendNextMidiMessage() {
+  MidiMessage message;
+  if (dequeueMessage(message)) {
+    Wire.write(message.status);
+    Wire.write(message.data1);
+    Wire.write(message.data2);
+  } else {
+    Wire.write(0); // Pas de message disponible
+  }
+  Wire.endTransmission();
 }
